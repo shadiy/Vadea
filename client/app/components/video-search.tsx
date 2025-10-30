@@ -23,7 +23,7 @@ export function SearchAndSelect({
               item.toLowerCase().includes(query.toLowerCase()) &&
               !selected.includes(item),
         )
-      : items;
+      : items.filter((item) => !selected.includes(item));
 
    return (
       <div className="flex flex-col md:flex-row gap-4 py-4 max-w-3xl">
@@ -57,7 +57,7 @@ export function SearchAndSelect({
 
          {/* Right side: Selected items */}
          <div className="w-full md:w-1/2">
-            <h3 className="text-xl font-semibold mb-2">Selected</h3>
+            <h3 className="text-3xl font-semibold mb-2">Selected</h3>
             {selected.length === 0 ? (
                <p className="text-gray-500 text-sm">No items selected.</p>
             ) : (

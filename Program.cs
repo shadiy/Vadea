@@ -82,26 +82,13 @@ app.MapPost("api/logout", async (HttpContext ctx) =>
     return Results.Redirect("/");
 });
 
-app.MapGet("api/videos", async (AppDbContext db) =>
+app.MapGet("api/videos", (AppDbContext db) =>
 {
-    var videos = await db.Videos.ToListAsync();
-
-    List<string> response = new();
-
-    foreach (var video in videos)
-    {
-        string filePath = Path.Combine(videosPath, video.FileName);
-        if (File.Exists(filePath))
-        {
-            response.Add(video.Name);
-        }
-        else
-        {
-            Console.WriteLine($"Video {video.Name} not found.");
-        }
-    }
-
-    string jsonString = JsonSerializer.Serialize(response.ToArray());
+    var videos = db.Videos
+      .Include(v => v.Featured)
+      .Select<Video, VideoResponse>(v => new VideoResponse { Name = v.Name, Featured = v.Featured != null })
+      .ToArray();
+    string jsonString = JsonSerializer.Serialize(videos);
     return Results.Json(jsonString);
 });
 
@@ -148,24 +135,11 @@ app.MapGet("api/videos/random", async (AppDbContext db) =>
 
 app.MapGet("api/videos/featured", async (AppDbContext db) =>
 {
-    var featured = await db.Featured.Include(f => f.Video).ToListAsync();
-
-    List<string> videoNames = new();
-
-    foreach (var video in featured)
-    {
-        string filePath = Path.Combine(videosPath, video.Video.FileName);
-        if (File.Exists(filePath))
-        {
-            videoNames.Add(video.Video.Name);
-        }
-        else
-        {
-            Console.WriteLine($"Featured video {video.Video.Name} not found.");
-        }
-    }
-
-    string jsonString = JsonSerializer.Serialize(videoNames.ToArray());
+    var featured = await db.Featured
+      .Include(f => f.Video)
+      .Select(f => f.Video.Name)
+      .ToListAsync();
+    string jsonString = JsonSerializer.Serialize(featured.ToArray());
     return Results.Json(jsonString);
 });
 
@@ -294,29 +268,6 @@ app.MapPost("api/upload", async (IFormFile videoFile, AppDbContext db) =>
     return Results.Ok("Upload successful!");
 }).DisableAntiforgery().RequireAuthorization();
 
-app.MapGet("api/admin/videos", async (AppDbContext db) =>
-{
-    var videos = await db.Videos.Include(v => v.Featured).ToListAsync();
-
-    List<VideoResponse> response = new List<VideoResponse>();
-
-    foreach (var video in videos)
-    {
-        string filePath = Path.Combine(videosPath, video.FileName);
-        if (File.Exists(filePath))
-        {
-            response.Add(new VideoResponse { name = video.Name, featured = video.Featured != null });
-        }
-        else
-        {
-            Console.WriteLine($"Video {video.FileName} not found");
-        }
-    }
-
-    string jsonString = JsonSerializer.Serialize(response.ToArray());
-    return Results.Json(jsonString);
-}).RequireAuthorization();
-
 app.MapGet("api/playlists", async (AppDbContext db) =>
 {
     var playlists = await db.Playlists.Select(p => p.Name).ToListAsync();
@@ -434,15 +385,15 @@ public class Credentials
     public string Password { get; set; } = string.Empty;
 }
 
-class VideoResponse
-{
-    public string name { get; set; } = string.Empty;
-    public bool featured { get; set; } = false;
-}
-
 class RenameRequest
 {
     public string newName { get; set; } = string.Empty;
+}
+
+class VideoResponse
+{
+    public string Name { get; set; } = string.Empty;
+    public bool Featured { get; set; }
 }
 
 class NewPlaylist

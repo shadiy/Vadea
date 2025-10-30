@@ -1,6 +1,6 @@
 import type { Route } from "./+types/playlist-manage";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { useParams } from "react-router";
 import { SearchAndSelect } from "~/components/video-search";
@@ -44,26 +44,32 @@ export default function Home() {
 
    const navigate = useNavigate();
 
-   const [playlistName, setPlaylistName] = useState<string>("");
-   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
-
    const queryClient = useQueryClient();
+
+   const [playlistName, setPlaylistName] = useState<string>(name ?? "");
 
    const playlistQuery = useQuery({
       queryKey: ["admin-playlist"],
-      queryFn: () =>
-         fetch(`/api/playlists/${name}`)
-            .then((res) => res.json())
-            .then((res) => JSON.parse(res)),
+      queryFn: async (): Promise<string[]> => {
+         const res = await fetch(`/api/playlists/${name}`);
+         if (res.ok) {
+            const json = await res.json();
+            return JSON.parse(json);
+         }
+
+         return [];
+      },
       enabled: !newPlaylist,
+      initialData: [],
    });
 
-   let isPending = playlistQuery.isPending;
-   let error = playlistQuery.error;
-   let data: Playlist = playlistQuery.data ?? { name: "", videos: [] };
+   const [selectedVideos, setSelectedVideos] = useState<string[]>([]);
 
-   setPlaylistName(data.name);
-   setSelectedVideos(data.videos);
+   useEffect(() => {
+      if (playlistQuery.data) {
+         setSelectedVideos(playlistQuery.data);
+      }
+   }, [playlistQuery.data]);
 
    const videosQuery = useQuery({
       queryKey: ["all-videos"],
@@ -91,8 +97,9 @@ export default function Home() {
    const handleRemove = (item: string) =>
       setSelectedVideos((prev) => prev.filter((i) => i !== item));
 
-   if (isPending) return "Loading...";
-   if (error) return "An error has occurred: " + error.message;
+   if (playlistQuery.isPending) return "Loading...";
+   if (playlistQuery.error)
+      return "An error has occurred: " + playlistQuery.error.message;
 
    return (
       <div className="flex flex-col gap-4 py-6 mx-auto max-w-3xl">
@@ -117,7 +124,7 @@ export default function Home() {
             <p className="text-lg">Loading...</p>
          ) : (
             <SearchAndSelect
-               items={videosQuery.data}
+               items={videosQuery.data.map((v: any) => v.Name)}
                selected={selectedVideos}
                onAdd={handleAdd}
                onRemove={handleRemove}

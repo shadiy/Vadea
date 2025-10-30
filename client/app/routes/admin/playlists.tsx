@@ -1,9 +1,6 @@
-import { useNavigate } from "react-router";
 import type { Route } from "./+types/playlists";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, type ChangeEvent } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { NavLink } from "react-router";
-import { useParams } from "react-router";
 
 export function meta({}: Route.MetaArgs) {
    return [
@@ -28,7 +25,7 @@ export default function Home() {
       <div className="flex flex-col gap-2 py-2">
          <NavLink
             to={"/admin/playlists/new"}
-            className="bg-blue-500 hover:bg-blue-600 p-4 w-24"
+            className="bg-blue-500 hover:bg-blue-600 p-2 w-32 rounded"
          >
             Create Playlist
          </NavLink>

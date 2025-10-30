@@ -66,7 +66,7 @@ export default function Home() {
    const { isPending, error, data } = useQuery({
       queryKey: ["admin-videos"],
       queryFn: () =>
-         fetch("/api/admin/videos/")
+         fetch("/api/videos")
             .then((res) => res.json())
             .then((res) => JSON.parse(res)),
    });
