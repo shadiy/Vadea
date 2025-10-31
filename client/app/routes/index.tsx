@@ -2,13 +2,6 @@ import type { Route } from "./+types/featured";
 import { Outlet } from "react-router";
 import { NavLink } from "react-router";
 
-export function meta({}: Route.MetaArgs) {
-   return [
-      { title: "Featured Videos" },
-      { name: "description", content: "Featured Videos" },
-   ];
-}
-
 export default function Home() {
    return (
       <main>
@@ -32,6 +25,7 @@ export default function Home() {
                <NavLink
                   key={tab.name}
                   to={tab.href}
+                  prefetch="intent"
                   viewTransition
                   className={({ isActive }) =>
                      isActive
@@ -44,9 +38,7 @@ export default function Home() {
             ))}
          </section>
 
-         <section className="grid grid-cols-1 md:grid-cols-6 gap-4 p-6 bg-[#121212]">
-            <Outlet />
-         </section>
+         <Outlet />
       </main>
    );
 }

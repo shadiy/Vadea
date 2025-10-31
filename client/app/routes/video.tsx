@@ -3,7 +3,7 @@ import { useParams } from "react-router";
 import { RandomVideos } from "~/components/random-videos";
 
 export function meta({}: Route.MetaArgs) {
-   return [{ title: "Videos" }, { name: "description", content: "Videos" }];
+   return [{ title: "Video" }, { name: "description", content: "Video" }];
 }
 
 export default function Home() {

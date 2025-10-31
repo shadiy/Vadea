@@ -9,5 +9,9 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-   return <Videos url="/api/videos/" queryKey="all-videos" />;
+   return (
+      <section className="flex flex-col md:flex-row gap-4 p-6 bg-[#121212]">
+         <Videos url="/api/videos/" queryKey="all-videos" />
+      </section>
+   );
 }

@@ -10,10 +10,7 @@ export default function Videos({
 }) {
    const { isPending, error, data } = useQuery({
       queryKey: [queryKey],
-      queryFn: () =>
-         fetch(url)
-            .then((res) => res.json())
-            .then((res) => JSON.parse(res)),
+      queryFn: () => fetch(url).then((res) => res.json()),
    });
 
    if (isPending) return "Loading...";
@@ -21,8 +18,12 @@ export default function Videos({
 
    return (
       <>
-         {data.map((name: string) => (
-            <Thumbnail key={name} videoName={name} />
+         {data.map(({ name, uploadedAt }: any) => (
+            <Thumbnail
+               key={name}
+               videoName={name}
+               uploadedAt={new Date(uploadedAt)}
+            />
          ))}
       </>
    );

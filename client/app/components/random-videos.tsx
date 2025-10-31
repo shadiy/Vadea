@@ -4,10 +4,7 @@ import { Thumbnail } from "./thumbnail";
 export function RandomVideos() {
    const { isPending, error, data } = useQuery({
       queryKey: ["random"],
-      queryFn: () =>
-         fetch("/api/videos/random")
-            .then((res) => res.json())
-            .then((res) => JSON.parse(res)),
+      queryFn: () => fetch("/api/videos/random").then((res) => res.json()),
    });
 
    if (isPending) return "Loading...";
@@ -15,9 +12,9 @@ export function RandomVideos() {
 
    return (
       <ul>
-         {data.map((video: string) => (
-            <li key={video} className="list-none mb-6">
-               <Thumbnail key={video} videoName={video} />
+         {data.map(({ name, uploadedAt }: any) => (
+            <li key={name} className="list-none mb-6">
+               <Thumbnail key={name} videoName={name} uploadedAt={uploadedAt} />
             </li>
          ))}
       </ul>

@@ -86,10 +86,9 @@ app.MapGet("api/videos", (AppDbContext db) =>
 {
     var videos = db.Videos
       .Include(v => v.Featured)
-      .Select<Video, VideoResponse>(v => new VideoResponse { Name = v.Name, Featured = v.Featured != null })
+      .Select<Video, VideoResponse>(v => new VideoResponse { Name = v.Name, Featured = v.Featured != null, UploadedAt = v.UploadedAt })
       .ToArray();
-    string jsonString = JsonSerializer.Serialize(videos);
-    return Results.Json(jsonString);
+    return Results.Json(videos);
 });
 
 app.MapGet("api/videos/random", async (AppDbContext db) =>
@@ -112,35 +111,20 @@ app.MapGet("api/videos/random", async (AppDbContext db) =>
         }
     }
 
-    var videos = await db.Videos.Where(x => ids.Contains(x.Id)).ToListAsync();
-
-    List<string> fileNames = new();
-
-    foreach (var video in videos)
-    {
-        string filePath = Path.Combine(videosPath, video.FileName);
-        if (File.Exists(filePath))
-        {
-            fileNames.Add(video.Name);
-        }
-        else
-        {
-            Console.WriteLine($"Video {video.Name} not found.");
-        }
-    }
-
-    string jsonString = JsonSerializer.Serialize(fileNames.ToArray());
-    return Results.Json(jsonString);
+    var videos = db.Videos
+      .Select(v => new VideoResponse { Name = v.Name, Featured = v.Featured != null, UploadedAt = v.UploadedAt })
+      .Where(x => ids.Contains(x.Id))
+      .ToArray();
+    return Results.Json(videos);
 });
 
-app.MapGet("api/videos/featured", async (AppDbContext db) =>
+app.MapGet("api/videos/featured", (AppDbContext db) =>
 {
-    var featured = await db.Featured
+    var featured = db.Featured
       .Include(f => f.Video)
-      .Select(f => f.Video.Name)
-      .ToListAsync();
-    string jsonString = JsonSerializer.Serialize(featured.ToArray());
-    return Results.Json(jsonString);
+      .Select<Featured, FeaturedResponse>(f => new() { Name = f.Video.Name, UploadedAt = f.Video.UploadedAt })
+      .ToArray();
+    return Results.Json(featured);
 });
 
 app.MapGet("api/videos/{videoName}", async (string videoName, AppDbContext db) =>
@@ -268,11 +252,10 @@ app.MapPost("api/upload", async (IFormFile videoFile, AppDbContext db) =>
     return Results.Ok("Upload successful!");
 }).DisableAntiforgery().RequireAuthorization();
 
-app.MapGet("api/playlists", async (AppDbContext db) =>
+app.MapGet("api/playlists", (AppDbContext db) =>
 {
-    var playlists = await db.Playlists.Select(p => p.Name).ToListAsync();
-    string jsonString = JsonSerializer.Serialize(playlists.ToArray());
-    return Results.Json(jsonString);
+    var playlists = db.Playlists.Select(p => p.Name).ToArray();
+    return Results.Json(playlists);
 });
 
 app.MapPost("api/playlists", async ([FromBody] NewPlaylist newPlaylist, AppDbContext db) =>
@@ -299,10 +282,9 @@ app.MapGet("api/playlists/{name}", async (string name, AppDbContext db) =>
         return Results.NotFound("Playlist not found");
     }
 
-    var names = playlist.Videos.Select(v => v.Name);
+    var names = playlist.Videos.Select(v => v.Name).ToArray();
 
-    string jsonString = JsonSerializer.Serialize(names.ToArray());
-    return Results.Json(jsonString);
+    return Results.Json(names);
 });
 
 app.MapDelete("api/playlists/{name}", async (string name, AppDbContext db) =>
@@ -330,16 +312,18 @@ public class Video
     public int Id { get; set; }
 
     [Required]
-    [StringLength(255)]
-    public string FileName { get; set; } = string.Empty;
-
-    [Required]
     public string Name { get; set; } = string.Empty;
 
     public string Description { get; set; } = string.Empty;
 
     public DateTime UploadedAt { get; set; } = DateTime.UtcNow;
+
+    [Required]
+    [StringLength(255)]
+    public string FileName { get; set; } = string.Empty;
+
     public Featured? Featured { get; set; }
+
     public ICollection<Playlist> Playlists { get; set; } = new List<Playlist>();
 }
 
@@ -394,12 +378,19 @@ class VideoResponse
 {
     public string Name { get; set; } = string.Empty;
     public bool Featured { get; set; }
+    public DateTime UploadedAt { get; set; }
 }
 
 class NewPlaylist
 {
     public string Name { get; set; } = string.Empty;
     public string[] Videos { get; set; }
+}
+
+class FeaturedResponse
+{
+    public string Name { get; set; } = string.Empty;
+    public DateTime UploadedAt { get; set; }
 }
 
 public partial class Program { }

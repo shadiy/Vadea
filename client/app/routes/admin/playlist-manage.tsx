@@ -53,8 +53,7 @@ export default function Home() {
       queryFn: async (): Promise<string[]> => {
          const res = await fetch(`/api/playlists/${name}`);
          if (res.ok) {
-            const json = await res.json();
-            return JSON.parse(json);
+            return await res.json();
          }
 
          return [];
@@ -73,10 +72,7 @@ export default function Home() {
 
    const videosQuery = useQuery({
       queryKey: ["all-videos"],
-      queryFn: () =>
-         fetch("/api/videos/")
-            .then((res) => res.json())
-            .then((res) => JSON.parse(res)),
+      queryFn: () => fetch("/api/videos/").then((res) => res.json()),
    });
 
    const deleteMutation = useMutation({

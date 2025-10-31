@@ -26,7 +26,7 @@ export function SearchAndSelect({
       : items.filter((item) => !selected.includes(item));
 
    return (
-      <div className="flex flex-col md:flex-row gap-4 py-4 max-w-3xl">
+      <div className="flex flex-col md:flex-row gap-4 py-4 max-w-3xl max-h-96">
          {/* Left side: Search and results */}
          <div className="w-full md:w-1/2">
             <input
@@ -34,11 +34,11 @@ export function SearchAndSelect({
                value={query}
                onChange={(e) => setQuery(e.target.value)}
                placeholder={placeholder}
-               className="w-full p-2 border rounded-lg"
+               className="w-full p-2 border rounded-lg h-10"
             />
 
             {filtered.length > 0 && (
-               <ul className="mt-2 border rounded-lg divide-y shadow-sm max-h-96">
+               <ul className="mt-2 border rounded-lg divide-y shadow-sm">
                   {filtered.map((item) => (
                      <li
                         key={item}
@@ -57,7 +57,7 @@ export function SearchAndSelect({
 
          {/* Right side: Selected items */}
          <div className="w-full md:w-1/2">
-            <h3 className="text-3xl font-semibold mb-2">Selected</h3>
+            <h3 className="text-3xl font-semibold mb-2 h-10">Selected</h3>
             {selected.length === 0 ? (
                <p className="text-gray-500 text-sm">No items selected.</p>
             ) : (
