@@ -20,17 +20,14 @@ export default function Home() {
    if (error) return "An error has occurred: " + error.message;
 
    return (
-      <div className="flex flex-col gap-4 w-full">
+      <div className="flex flex-col gap-4 w-full p-4">
          {data.map((name: string) => (
             <div className="flex flex-col gap-2 w-full">
                <div className="flex flex-row gap-2 w-full items-center">
                   <h2 className="text-lg">{name}</h2>
                   <Link
                      to={`/playlist/${name}`}
-                     className="text-base bg-transparent hover:bg-stone-600/80"
-                     onClick={() => {
-                        console.log("clicked");
-                     }}
+                     className="p-6 bg-transparent hover:bg-stone-600/80"
                   >
                      Play
                   </Link>

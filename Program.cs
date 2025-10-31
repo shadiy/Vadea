@@ -112,8 +112,8 @@ app.MapGet("api/videos/random", async (AppDbContext db) =>
     }
 
     var videos = db.Videos
-      .Select(v => new VideoResponse { Name = v.Name, Featured = v.Featured != null, UploadedAt = v.UploadedAt })
       .Where(x => ids.Contains(x.Id))
+      .Select(v => new VideoResponse { Name = v.Name, Featured = v.Featured != null, UploadedAt = v.UploadedAt })
       .ToArray();
     return Results.Json(videos);
 });
