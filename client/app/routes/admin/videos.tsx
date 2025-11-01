@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import type { Route } from "./+types/videos";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useRef, type ChangeEvent } from "react";
+import { useEffect, useRef, useState, type ChangeEvent } from "react";
 
 export function meta({}: Route.MetaArgs) {
    return [
@@ -63,13 +63,24 @@ export default function Home() {
 
    const queryClient = useQueryClient();
 
-   const { isPending, error, data } = useQuery({
+   const { isPending, error, data } = useQuery<Video[]>({
       queryKey: ["admin-videos"],
-      queryFn: () =>
-         fetch("/api/videos")
-            .then((res) => res.json())
-            .then((res) => JSON.parse(res)),
+      queryFn: () => fetch("/api/videos").then((res) => res.json()),
    });
+
+   const [sortedData, setSortedData] = useState<Video[]>([]);
+
+   useEffect(() => {
+      if (data) {
+         const sorted = [...data].sort((a, b) => {
+            return (
+               new Date(a.uploadedAt).getTime() -
+               new Date(b.uploadedAt).getTime()
+            );
+         });
+         setSortedData(sorted);
+      }
+   }, [data]);
 
    const deleteVideoMutation = useMutation({
       mutationFn: deleteVideo,
@@ -132,69 +143,64 @@ export default function Home() {
                <tr className="border-b bg-[#202020] hover:bg-[#222] text-[#ddd]">
                   <th className="px-3 py-4 text-left font-medium">Preview</th>
                   <th className="px-3 py-4 text-left font-medium">Name</th>
-                  <th className="px-3 py-4 text-left font-medium">Public</th>
+                  <th className="px-3 py-4 text-left font-medium">
+                     Uploaded At
+                  </th>
                   <th className="px-3 py-4 text-left font-medium">Featured</th>
                   <th className="px-3 py-4 text-left font-medium">Actions</th>
                </tr>
             </thead>
             <tbody>
-               {data.map(
-                  ({ name, featured }: { name: string; featured: boolean }) => (
-                     <tr className="border-b bg-[#202020] hover:bg-[#222] text-[#ddd]">
-                        <td className="px-3 py-4 text-left font-medium bg-transparent overflow-hidden object-cover">
-                           <video
-                              src={`/api/videos/${name}`}
-                              className="w-32 block"
-                              muted
-                           />
-                        </td>
-                        <td className="px-3 py-4 text-left font-medium text-ellipsis max-w-2xl overflow-hidden whitespace-nowrap">
-                           <input
-                              className="bg-transparent rounded p-2 border border-stone-600"
-                              defaultValue={name}
-                              onKeyUp={(e) => {
-                                 if (e.key === "Enter") {
-                                    renameVideoMutation.mutate({
-                                       oldName: name,
-                                       newName: e.currentTarget.value,
-                                    });
-                                 }
-                              }}
-                              onBlur={(e) => {
+               {sortedData.map(({ name, featured, uploadedAt }) => (
+                  <tr className="border-b bg-[#202020] hover:bg-[#222] text-[#ddd]">
+                     <td className="px-3 py-4 text-left font-medium bg-transparent overflow-hidden object-cover">
+                        <video
+                           src={`/api/videos/${name}`}
+                           className="w-32 block"
+                           muted
+                        />
+                     </td>
+                     <td className="px-3 py-4 text-left font-medium text-ellipsis max-w-2xl overflow-hidden whitespace-nowrap">
+                        <input
+                           className="bg-transparent rounded p-2 border border-stone-600"
+                           defaultValue={name}
+                           onKeyUp={(e) => {
+                              if (e.key === "Enter") {
                                  renameVideoMutation.mutate({
                                     oldName: name,
                                     newName: e.currentTarget.value,
                                  });
-                              }}
-                           />
-                        </td>
-                        <td className="px-3 py-4 text-left font-medium">
-                           <input
-                              type="checkbox"
-                              checked={featured}
-                              onChange={() => postFeatureMutation.mutate(name)}
-                              className="w-6 h-6"
-                           />
-                        </td>
-                        <td className="px-3 py-4 text-left font-medium">
-                           <input
-                              type="checkbox"
-                              checked={featured}
-                              onChange={() => postFeatureMutation.mutate(name)}
-                              className="w-6 h-6"
-                           />
-                        </td>
-                        <td className="px-3 py-4 text-left font-medium">
-                           <button
-                              className="bg-red-500 px-2 py-1 rounded hover:bg-red-600"
-                              onClick={() => deleteVideoMutation.mutate(name)}
-                           >
-                              Delete
-                           </button>
-                        </td>
-                     </tr>
-                  ),
-               )}
+                              }
+                           }}
+                           onBlur={(e) => {
+                              renameVideoMutation.mutate({
+                                 oldName: name,
+                                 newName: e.currentTarget.value,
+                              });
+                           }}
+                        />
+                     </td>
+                     <td className="px-3 py-4 text-left font-medium">
+                        <p>{new Date(uploadedAt).toLocaleDateString()}</p>
+                     </td>
+                     <td className="px-3 py-4">
+                        <input
+                           type="checkbox"
+                           checked={featured}
+                           onChange={() => postFeatureMutation.mutate(name)}
+                           className="w-6 h-6"
+                        />
+                     </td>
+                     <td className="px-3 py-4 text-left font-medium">
+                        <button
+                           className="bg-red-500 px-2 py-1 rounded hover:bg-red-600"
+                           onClick={() => deleteVideoMutation.mutate(name)}
+                        >
+                           Delete
+                        </button>
+                     </td>
+                  </tr>
+               ))}
             </tbody>
          </table>
       </div>

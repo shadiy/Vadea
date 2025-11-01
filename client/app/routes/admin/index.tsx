@@ -1,5 +1,5 @@
 import { Navigate } from "react-router";
-import type { Route } from "./+types/index";
+import type { Route } from "../../+types/index";
 
 export function meta({}: Route.MetaArgs) {
    return [
@@ -9,5 +9,5 @@ export function meta({}: Route.MetaArgs) {
 }
 
 export default function Home() {
-   return <Navigate to={"/admin/videos"} replace />;
+   return <Navigate to="/admin/videos" replace />;
 }

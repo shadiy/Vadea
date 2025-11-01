@@ -1,19 +1,17 @@
-import type { Route } from "./+types/featured";
-import { Outlet } from "react-router";
-import { NavLink } from "react-router";
+import { Outlet, NavLink } from "react-router";
 
 export default function Home() {
    return (
       <main>
          <section className="flex items-center gap-6 border-b-1 border-b-[#333] bg-[#121212] p-8">
             <img
-               src="#"
+               src="/channel-icon.jpg"
                alt="Channel Picture"
                className="w-32 h-32 rounded-full"
             />
             <div className="flex-1">
                <h2 className="text-3xl font-bold">Vadea</h2>
-               <p className="text-[#aaa]">
+               <p className="text-[#aaa] max-w-3xl">
                   Welcome to Vadea! Explore featured videos, playlists, and our
                   full video collection.
                </p>

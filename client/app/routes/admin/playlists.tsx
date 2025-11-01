@@ -12,10 +12,7 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
    const { isPending, error, data } = useQuery({
       queryKey: ["admin-playlists"],
-      queryFn: () =>
-         fetch("/api/playlists")
-            .then((res) => res.json())
-            .then((res) => JSON.parse(res)),
+      queryFn: () => fetch("/api/playlists").then((res) => res.json()),
    });
 
    if (isPending) return "Loading...";
@@ -34,7 +31,6 @@ export default function Home() {
             <thead>
                <tr className="border-b bg-[#202020] hover:bg-[#222] text-[#ddd]">
                   <th className="px-3 py-4 text-left font-medium">Name</th>
-                  <th className="px-3 py-4 text-left font-medium">Public</th>
                   <th className="px-3 py-4 text-left font-medium">Actions</th>
                </tr>
             </thead>
@@ -43,16 +39,6 @@ export default function Home() {
                   <tr className="border-b bg-[#202020] hover:bg-[#222] text-[#ddd]">
                      <td className="px-3 py-4 text-left font-medium text-ellipsis max-w-2xl overflow-hidden whitespace-nowrap">
                         <h2 className="text-lg">{name}</h2>
-                     </td>
-                     <td className="px-3 py-4 text-left font-medium">
-                        <input
-                           type="checkbox"
-                           checked={false}
-                           onChange={() =>
-                              console.log("TODO: change to public")
-                           }
-                           className="w-6 h-6"
-                        />
                      </td>
                      <td className="px-3 py-4 text-left font-medium">
                         <NavLink

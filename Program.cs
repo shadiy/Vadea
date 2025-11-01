@@ -276,15 +276,17 @@ app.MapPost("api/playlists", async ([FromBody] NewPlaylist newPlaylist, AppDbCon
 
 app.MapGet("api/playlists/{name}", async (string name, AppDbContext db) =>
 {
-    var playlist = await db.Playlists.Include(p => p.Videos).FirstOrDefaultAsync(p => name == p.Name);
+    var playlist = await db.Playlists.Include(p => p.Videos).ThenInclude(v => v.Featured).FirstOrDefaultAsync(p => name == p.Name);
     if (playlist is null)
     {
         return Results.NotFound("Playlist not found");
     }
 
-    var names = playlist.Videos.Select(v => v.Name).ToArray();
+    var videos = playlist.Videos
+      .Select(v => new VideoResponse { Name = v.Name, Featured = v.Featured != null, UploadedAt = v.UploadedAt })
+      .ToArray();
 
-    return Results.Json(names);
+    return Results.Json(videos);
 });
 
 app.MapDelete("api/playlists/{name}", async (string name, AppDbContext db) =>

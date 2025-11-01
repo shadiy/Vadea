@@ -46,12 +46,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
                   <h1 className="text-2xl font-bold inline-block align-middle">
                      <a href="/">Vadea</a>
                   </h1>
-                  <Link to="/login">Admin</Link>
                </header>
 
                {children}
 
                <footer className="flex flex-col items-center justify-center p-10 bg-[#1c1c1c] text-[#aaa] text-sm mt-12 gap-8">
+                  <Link to="/login">Admin</Link>
                   <p>
                      Videa created by <span className="font-bold">Shadiy</span>
                   </p>

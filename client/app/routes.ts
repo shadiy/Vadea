@@ -15,4 +15,5 @@ export default [
    ]),
    route("login", "routes/login.tsx"),
    route("/videos/:name", "routes/video.tsx"),
+   route("/playlist/:name", "routes/playlist.tsx"),
 ] satisfies RouteConfig;

@@ -27,12 +27,12 @@ export default function Home() {
                   <h2 className="text-lg">{name}</h2>
                   <Link
                      to={`/playlist/${name}`}
-                     className="p-6 bg-transparent hover:bg-stone-600/80"
+                     className="p-2 bg-stone-600/90 hover:bg-stone-600/70 rounded"
                   >
                      Play
                   </Link>
                </div>
-               <div className="flex flex-col md:flex-row gap-2 w-full">
+               <div className="flex flex-col md:flex-row gap-4 w-full ml-2">
                   <Videos
                      url={`/api/playlists/${name}`}
                      queryKey={`playlist-${name}`}
