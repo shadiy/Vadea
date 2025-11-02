@@ -18,6 +18,7 @@ async function deletePlaylist(name: string) {
 
    await fetch(`/api/playlists/${name}`, {
       method: "DELETE",
+      credentials: "include",
    });
 }
 
@@ -31,6 +32,7 @@ async function postPlaylist(playlist: Playlist) {
 
    await fetch(`/api/playlists`, {
       method: "POST",
+      credentials: "include",
       headers: {
          "Content-Type": "application/json",
       },
@@ -43,20 +45,14 @@ export default function Home() {
    const newPlaylist = name === "new";
 
    const navigate = useNavigate();
-
    const queryClient = useQueryClient();
-
    const [playlistName, setPlaylistName] = useState<string>(name ?? "");
 
-   const playlistQuery = useQuery({
+   const playlistQuery = useQuery<Video[]>({
       queryKey: ["admin-playlist"],
-      queryFn: async (): Promise<string[]> => {
+      queryFn: async () => {
          const res = await fetch(`/api/playlists/${name}`);
-         if (res.ok) {
-            return await res.json();
-         }
-
-         return [];
+         return await res.json();
       },
       enabled: !newPlaylist,
       initialData: [],
@@ -66,13 +62,14 @@ export default function Home() {
 
    useEffect(() => {
       if (playlistQuery.data) {
-         setSelectedVideos(playlistQuery.data);
+         setSelectedVideos(playlistQuery.data.map((v) => v.name));
       }
    }, [playlistQuery.data]);
 
-   const videosQuery = useQuery({
+   const videosQuery = useQuery<Video[]>({
       queryKey: ["all-videos"],
       queryFn: () => fetch("/api/videos/").then((res) => res.json()),
+      initialData: [],
    });
 
    const deleteMutation = useMutation({
@@ -120,7 +117,7 @@ export default function Home() {
             <p className="text-lg">Loading...</p>
          ) : (
             <SearchAndSelect
-               items={videosQuery.data.map((v: any) => v.Name)}
+               items={videosQuery.data.map((v) => v.name)}
                selected={selectedVideos}
                onAdd={handleAdd}
                onRemove={handleRemove}

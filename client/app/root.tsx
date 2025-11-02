@@ -12,6 +12,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import type { Route } from "./+types/root";
 import "./app.css";
+import { useAuthStatus } from "./hooks/useAuthStatus";
+import { useNavigate } from "react-router";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +31,9 @@ export const links: Route.LinksFunction = () => [
 ];
 
 export function Layout({ children }: { children: React.ReactNode }) {
+   const navigate = useNavigate();
+   const { loggedIn } = useAuthStatus();
+
    return (
       <html lang="en">
          <head>
@@ -44,8 +49,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <QueryClientProvider client={queryClient}>
                <header className="flex justify-between items-center p-5 border-b-1 border-b-[#333] gap-5  bg-[#1c1c1c]">
                   <h1 className="text-2xl font-bold inline-block align-middle">
-                     <a href="/">Vadea</a>
+                     <Link to="/">Vadea</Link>
                   </h1>
+                  {loggedIn && (
+                     <button
+                        type="button"
+                        onClick={() => {
+                           fetch("/api/logout", {
+                              method: "POST",
+                              credentials: "include",
+                           }).then((res) => {
+                              if (res.ok) {
+                                 navigate("/");
+                              }
+                           });
+                        }}
+                        className="p-2 bg-red-500 rounded cursor-pointer"
+                     >
+                        Logout
+                     </button>
+                  )}
                </header>
 
                {children}

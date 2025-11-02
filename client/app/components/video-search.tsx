@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
 interface SearchAndSelectProps {
    items: string[]; // all available items to search from

@@ -1,31 +1,13 @@
-import { Outlet, NavLink, useNavigate } from "react-router";
+import { Outlet, NavLink } from "react-router";
 
 export default function Home() {
-   const navigate = useNavigate();
-
    return (
       <main className="w-full p-4">
-         <div className="flex flex-row justify-between items-center py-2">
-            <h2 className="text-3xl">Manage Videos</h2>
-
-            <button
-               type="button"
-               onClick={() => {
-                  fetch("/api/logout", { method: "POST" }).then((res) => {
-                     if (res.ok) {
-                        navigate("/login");
-                     }
-                  });
-               }}
-               className="p-2 bg-red-500 rounded"
-            >
-               Logout
-            </button>
-         </div>
+         <h2 className="text-3x py-2l">Manage Videos</h2>
 
          <div className="flex flex-row">
             <NavLink
-               to={"/admin/videos"}
+               to="/admin/videos"
                viewTransition
                className={({ isActive }) =>
                   isActive
@@ -36,7 +18,7 @@ export default function Home() {
                Videos
             </NavLink>
             <NavLink
-               to={"/admin/playlists"}
+               to="/admin/playlists"
                viewTransition
                className={({ isActive }) =>
                   isActive

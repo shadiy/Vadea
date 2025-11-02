@@ -15,12 +15,14 @@ async function deleteVideo(name: string) {
 
    await fetch(`/api/videos/${name}/delete`, {
       method: "DELETE",
+      credentials: "include",
    });
 }
 
 function postFeaturedChanged(name: string) {
    return fetch(`/api/videos/${name}/feature`, {
       method: "POST",
+      credentials: "include",
    });
 }
 
@@ -33,6 +35,7 @@ async function postVideo(event: ChangeEvent<HTMLInputElement>) {
 
    await fetch("/api/upload", {
       method: "POST",
+      credentials: "include",
       body: formData,
    });
 }
@@ -51,6 +54,7 @@ async function postRenameVideo({
 
    await fetch(`/api/videos/${oldName}/rename`, {
       method: "POST",
+      credentials: "include",
       headers: {
          "Content-Type": "application/json",
       },

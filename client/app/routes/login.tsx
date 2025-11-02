@@ -20,6 +20,7 @@ export default function Home() {
 
       fetch("/api/login", {
          method: "POST",
+         credentials: "include",
          headers: {
             "Content-Type": "application/json",
             Accept: "application/json",

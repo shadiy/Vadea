@@ -31,6 +31,8 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(options =>
     {
         options.LoginPath = "/login"; // Redirect if not logged in
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;
     });
 builder.Services.AddAuthorization();
 
@@ -72,6 +74,11 @@ app.UseAntiforgery();
 
 app.MapFallbackToFile("index.html");
 
+app.MapGet("api/auth/status", (HttpContext ctx) =>
+{
+    return Results.Ok(new { loggedIn = ctx.User?.Identity?.IsAuthenticated });
+});
+
 app.MapPost("api/login", async ([FromBody] Credentials creds, HttpContext ctx) =>
 {
     //var form = await ctx.Request.ReadFormAsync();
@@ -84,7 +91,6 @@ app.MapPost("api/login", async ([FromBody] Credentials creds, HttpContext ctx) =
         var principal = new ClaimsPrincipal(identity);
 
         await ctx.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, principal);
-        Console.WriteLine("Logged in!!");
         return Results.Ok();
     }
 
