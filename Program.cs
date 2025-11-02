@@ -13,16 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.AspNetCore.Mvc;
 
-
-
 var builder = WebApplication.CreateBuilder(args);
-
-var videosPath = builder.Configuration["Paths:Videos"];
-if (!Directory.Exists(videosPath))
-{
-    Console.WriteLine("Videos path directory does not exist!. Create the directory that you set in the appsettings.json for Paths:Videos");
-    return;
-}
 
 var adminPassword = builder.Configuration["Admin:Password"];
 if (adminPassword == "")
@@ -45,6 +36,30 @@ builder.Services.AddAuthorization();
 
 builder.Services.AddProblemDetails();
 builder.Services.AddAntiforgery();
+
+builder.Services.AddSingleton<IVideoStorage>(sp =>
+{
+    var config = sp.GetRequiredService<IConfiguration>();
+    var type = config["Storage:Type"] ?? "Local";
+
+    return type switch
+    {
+        "S3" => new S3VideoStorage(
+            config["Storage:S3:Bucket"]!,
+            config["Storage:S3:Region"]!,
+            config["Storage:S3:AccessKey"]!,
+            config["Storage:S3:SecretKey"]!,
+            config["Storage:S3:Endpoint"]
+        ),
+        "WebDAV" => new WebDavVideoStorage(
+            config["Storage:WebDAV:BaseUrl"]!,
+            config["Storage:WebDAV:Username"]!,
+            config["Storage:WebDAV:Password"]!
+         ),
+        _ => new LocalVideoStorage(config["Storage:Local:BasePath"] ?? "videos")
+    };
+});
+
 
 var app = builder.Build();
 app.UseDefaultFiles();
@@ -127,7 +142,7 @@ app.MapGet("api/videos/featured", (AppDbContext db) =>
     return Results.Json(featured);
 });
 
-app.MapGet("api/videos/{videoName}", async (string videoName, AppDbContext db) =>
+app.MapGet("api/videos/{videoName}", async (string videoName, AppDbContext db, IVideoStorage storage) =>
 {
     Video video = await db.Videos.FirstOrDefaultAsync((e) => e.Name == videoName);
     if (video is null)
@@ -135,16 +150,12 @@ app.MapGet("api/videos/{videoName}", async (string videoName, AppDbContext db) =
         return Results.NotFound("Video not found.");
     }
 
-    string filePath = Path.Combine(videosPath, video.FileName);
-    if (!File.Exists(filePath))
-    {
-        return Results.NotFound("Video file not found.");
-    }
-
     // Return the file stream, optionally specifying content type and enabling range processing
-    return Results.Stream(new FileStream(filePath, FileMode.Open, FileAccess.Read),
-                          contentType: "video/mp4",
-                          enableRangeProcessing: true);
+    //return Results.Stream(new FileStream(filePath, FileMode.Open, FileAccess.Read),
+    //                      contentType: "video/mp4",
+    //                      enableRangeProcessing: true);
+
+    return Results.Stream(await storage.GetVideoAsync(video.FileName), contentType: "video/mp4", enableRangeProcessing: true);
 });
 
 app.MapPost("api/videos/{videoName}/feature", async (string videoName, AppDbContext db) =>
@@ -177,7 +188,7 @@ app.MapPost("api/videos/{videoName}/feature", async (string videoName, AppDbCont
     return Results.Ok();
 }).RequireAuthorization();
 
-app.MapDelete("api/videos/{videoName}", async (string videoName, AppDbContext db) =>
+app.MapDelete("api/videos/{videoName}", async (string videoName, AppDbContext db, IVideoStorage storage) =>
 {
     var video = await db.Videos.Include(v => v.Featured).FirstOrDefaultAsync((e) => e.Name == videoName);
     if (video is null)
@@ -185,11 +196,7 @@ app.MapDelete("api/videos/{videoName}", async (string videoName, AppDbContext db
         return Results.NotFound("Video not found.");
     }
 
-    string filePath = Path.Combine(videosPath, video.FileName);
-    if (!File.Exists(filePath))
-    {
-        return Results.NotFound("Video file not found.");
-    }
+    await storage.DeleteVideoAsync(video.FileName);
 
     db.Videos.Remove(video);
     if (video.Featured is not null)
@@ -199,9 +206,7 @@ app.MapDelete("api/videos/{videoName}", async (string videoName, AppDbContext db
 
     await db.SaveChangesAsync();
 
-    File.Delete(filePath);
-
-    Console.WriteLine($"Deleted {filePath}");
+    Console.WriteLine($"Deleted {video.FileName}");
 
     return Results.Ok();
 }).RequireAuthorization();
@@ -223,20 +228,16 @@ app.MapPost("api/videos/{videoName}/rename", async (string videoName, [FromBody]
     return Results.Ok();
 }).RequireAuthorization();
 
-app.MapPost("api/upload", async (IFormFile videoFile, AppDbContext db) =>
+app.MapPost("api/upload", async (IFormFile videoFile, AppDbContext db, IVideoStorage storage) =>
 {
     if (videoFile == null || videoFile.Length == 0)
     {
         return Results.BadRequest("No file uploaded.");
     }
 
-    string fileName = Guid.NewGuid().ToString() + "_" + videoFile.FileName;
-    string filePath = Path.Combine(videosPath, fileName);
+    string fileName = Guid.NewGuid().ToString();
 
-    using (var stream = new FileStream(filePath, FileMode.Create))
-    {
-        await videoFile.CopyToAsync(stream);
-    }
+    await storage.SaveVideoAsync(fileName, videoFile.OpenReadStream());
 
     Video video = new Video
     {
@@ -247,7 +248,7 @@ app.MapPost("api/upload", async (IFormFile videoFile, AppDbContext db) =>
     await db.Videos.AddAsync(video);
     await db.SaveChangesAsync();
 
-    Console.WriteLine($"Uploaded {filePath}");
+    Console.WriteLine($"Uploaded {fileName}");
 
     return Results.Ok("Upload successful!");
 }).DisableAntiforgery().RequireAuthorization();

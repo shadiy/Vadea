@@ -21,6 +21,8 @@ export default function Home() {
          return [];
       },
       refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
    });
 
    const [currentVideo, setCurrentVideo] = useState<string>("");
